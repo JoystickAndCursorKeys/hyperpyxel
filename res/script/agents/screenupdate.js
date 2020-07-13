@@ -53,7 +53,7 @@ class ScreenUpdaterAgent  {
 			this.renderCanvas.style.cursor = "url('res/img/pointer/main3.png') 10 10, auto"
 		}
 		else if( sig[ 0 ] == "SCREENUPDATER" && sig[ 1 ] == "GRABPOINTER" ) {
-			this.renderCanvas.style.cursor = "copy"
+			this.renderCanvas.style.cursor = "url('res/img/pointer/hand.png') 2 24, auto"
 		}
 		else if( sig[ 0 ] == "SCREENUPDATER" && sig[ 1 ] == "ZOOMPOINTER" ) {
 			//this.renderCanvas.style.cursor = "zoom-in"

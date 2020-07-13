@@ -216,6 +216,9 @@ class PanelsAgent {
 		panelIcons['fillwrap'] = new PanelIcon( iisButtons1c,  6 );
 		panelIcons['fillstretch'] = new PanelIcon( iisButtons1c, 7 );
 		panelIcons['fillnone'] = new PanelIcon( iisButtons1c, 8 );
+		panelIcons['fillbrush'] = new PanelIcon( iisButtons1c, 9 );
+		panelIcons['fillbrushstretch'] = new PanelIcon( iisButtons1c, 10 );
+		panelIcons['fillbrushwrap'] = new PanelIcon( iisButtons1c, 11 );
 
 
 		this.buttn_maxcol = 32;
@@ -368,7 +371,7 @@ class PanelsAgent {
 		bb.push(
 				new SliderButton( "SizeSlider" + id++,
 					PANEL_LEFTALIGN,row,
-					4, .8,
+					8, .8,
 					PPAINTR_BTYPE_HSLIDER,
 					this.valueAutoBrushSize,  'AUTOBRUSHSIZE', autoBrushSizeHandler ));
 
@@ -451,7 +454,7 @@ class PanelsAgent {
 		b.push( new ToolButton( 'mode.draw:pbucket', PANEL_LEFTALIGN,row, 1, 1,  PPAINTR_BTYPE_TOGGLE, {ico: panelIcons['pbucket']}  ,  'drawmode', this, 'setModeFill' ));
 		b.push( new ToolButton( 'mode.draw:pbucketselect', PANEL_LEFTALIGN,row, 1, 1,  PPAINTR_BTYPE_TOGGLE, {ico: panelIcons['pbucketselect']}  ,  'drawmode', this, 'setModeFill2' ));
 
-		this.toolOps['mode.draw:pbucket'] = null;
+		//this.toolOps['mode.draw:pbucket'] = null;
 		this.toolOps['mode.draw:pbucketselect'] = null;
 
 		b.push( new Separator( id++, PANEL_LEFTALIGN, row ) );
@@ -478,7 +481,7 @@ class PanelsAgent {
 		optionsspray.push( new ToolButton( "option:spray.intensity2", PANEL_LEFTALIGN,0, 1, 1,  PPAINTR_BTYPE_TOGGLE, {ico: panelIcons['spray2']}  ,  'spraymode', this, 'setSpray2' ));
 		optionsspray.push( new ToolButton( "option:spray.intensity3", PANEL_LEFTALIGN,0, 1, 1,  PPAINTR_BTYPE_TOGGLE, {ico: panelIcons['spray3']}  ,  'spraymode', this, 'setSpray3' ));
 
-		//------------
+		//------------ Shape
 
 		mainBP.makeAttachedSubPanel( "shapeops", optionsAnchor );
 		this.toolOps['mode.draw:rectangle'] = "shapeops";
@@ -487,7 +490,6 @@ class PanelsAgent {
 		this.toolOps['mode.draw:circle'] = "shapeops";
 
 		var optionsshape = [];
-
 
 		this.toggleLineModeButton = new ToolButton( 'toggle:line', PANEL_LEFTALIGN,0, 1, 1,  PPAINTR_BTYPE_CLICK, {ico: panelIcons['togglefillon']}  ,  null, this, 'toggleLineMode' );
 		optionsshape.push( this.toggleLineModeButton );
@@ -501,14 +503,36 @@ class PanelsAgent {
 
 		this.toggleFillOffIcon = panelIcons['fillnone'];
 		this.toggleFillSolidIcon = panelIcons['fillsolid'];
-		this.toggleFillBrushIcon = panelIcons['fillstretch'];
-		this.toggleFillBrushWrapIcon = panelIcons['fillwrap'];
+		this.toggleFillBrushIcon = panelIcons['fillbrushstretch'];
+		this.toggleFillBrushWrapIcon = panelIcons['fillbrushwrap'];
 		this.toggleFillModes = [];
 		this.toggleFillModes[ 0 ] = 'none';
 		this.toggleFillModes[ 1 ] = 'solid';
 		this.toggleFillModes[ 2 ] = 'stretch';
 		this.toggleFillModes[ 3 ] = 'wrap';
 		this.toggleFillModeString = 'none';
+
+		//------------ Fill
+
+		mainBP.makeAttachedSubPanel( "fillops", optionsAnchor );
+		this.toolOps['mode.draw:pbucket'] = "fillops";
+
+		var optionsfill = [];
+
+		this.toggleBucketFillModeButton = new ToolButton( 'toggle:bucketfill', PANEL_LEFTALIGN,0, 1, 1,  PPAINTR_BTYPE_CLICK, {ico: panelIcons['fillsolid']}  ,  null, this, 'toggleBucketFillMode' );
+		optionsfill.push( this.toggleBucketFillModeButton );
+		this.toggleBucketFillModeFlag = 0;
+
+		this.toggleBucketFillSolidIcon = panelIcons['fillsolid'];
+		this.toggleBucketFillBrushIcon = panelIcons['fillbrush'];
+		this.toggleBucketFillBrushWrapIcon = panelIcons['fillbrushstretch'];
+		this.toggleBucketFillModes = [];
+		this.toggleBucketFillModes[ 1 ] = 'solid';
+		this.toggleBucketFillModes[ 2 ] = 'stretch';
+		this.toggleBucketFillModes[ 3 ] = 'wrap';
+		this.toggleBucketFillModeString = 'none';
+
+		//-------------  ???
 
 /*
 		this.toggleFillModeButton2 = new ToolButton( 'toggle:fill2', PANEL_LEFTALIGN,0, 1, 1,  PPAINTR_BTYPE_CLICK, {ico: panelIcons['togglefilloff']}  ,  null, this, 'toggleFillMode' );
@@ -529,6 +553,7 @@ class PanelsAgent {
 		//mainBP.setButtons( bb2, 'brushops' );
 		mainBP.setButtons( optionsspray, 'sprayops' );
 		mainBP.setButtons( optionsshape, 'shapeops' );
+		mainBP.setButtons( optionsfill, 'fillops' );
 
 		mainBP.subPanelSetActiveState("brushops", false);
 
@@ -684,6 +709,28 @@ class PanelsAgent {
 	}
 
 
+
+
+	toggleBucketFillMode ( bid ) {
+
+		this.toggleBucketFillModeFlag += 1;
+		if( this.toggleBucketFillModeFlag >2 ) { this.toggleBucketFillModeFlag = 0; }
+		this.toggleBucketFillModeString = this.toggleBucketFillModes[ this.toggleBucketFillModeFlag ];
+
+		if( this.toggleBucketFillModeFlag == 0 ) {
+				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillSolidIcon );
+		} else if( this.toggleBucketFillModeFlag == 1 ) {
+				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillBrushIcon );
+		}	else if( this.toggleBucketFillModeFlag == 2 ) {
+				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillBrushWrapIcon );
+		}
+
+
+		this.signalBucketFillMode();
+
+	}
+
+
 	toggleFillMode ( bid ) {
 
 		this.toggleFillModeFlag += 1;
@@ -720,6 +767,20 @@ class PanelsAgent {
 		this.signalPaintShapeFillAndLine();
 
 	}
+
+
+	signalBucketFillMode() {
+		var sig = [];
+		sig[0] = 'PAINT';
+		sig[1] = 'SETBUCKETFILLMODE';
+		sig.data = {};
+		sig.data.bucketFillMode = this.toggleBucketFillModeFlag;
+		sig.destination = 'Paint';
+
+		this.bus.post( sig );
+
+	}
+
 
 	signalPaintShapeFillAndLine() {
 		var sig = [];
@@ -1633,7 +1694,7 @@ class PanelsAgent {
 
 	setDrawFunctionOptions( buttonId ) {
 
-		console.log( "setDrawFunctionOptions");
+		console.log( "setDrawFunctionOptions>>" + buttonId);
 		console.log( this.toolOps );
 
 		var found = false;
@@ -1646,12 +1707,12 @@ class PanelsAgent {
 
 		if( found ) {
 
-
 			for (const key of keys) {
 
 				var panel =  this.toolOps [ key ];
 				if( panel != null ) {
 
+						console.log("deactivate " + panel);
 						this.mainBP.subPanelSetActiveState( panel ,
 								false );
 				}
@@ -1662,7 +1723,7 @@ class PanelsAgent {
 				var panel =  this.toolOps [ key ];
 
 				if( panel != null && key == buttonId ) {
-
+						console.log("activate " + panel);
 						this.mainBP.subPanelSetActiveState( panel ,
 								true );
 
@@ -2137,7 +2198,7 @@ effectFlipY() {
 		this.setFunction( 'fill', undefined, "fill" );
 		this.setDrawFunctionOptions( 'mode.draw:pbucket' );
 
-		this.setColorFGMode('fc');
+		this.setColorFGMode('fc'); /* TODO, two mechanics to do the same thing, one for fill, another for draw */
 	}
 
 	setModeFill2( buttonMode ) {

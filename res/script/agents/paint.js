@@ -733,6 +733,15 @@ class PaintAgent  {
 				case 'SETFUNCTION':
 					this.state.setFunction( sig.data.name );
 					this.state.setFunctionParam( sig.data.param );
+
+					if( this.state.drawFunctionName == 'grabbrush' ) {
+
+						sig2[0] = "SCREENUPDATER";
+						sig2[1] = "GRABPOINTER";
+						sig2.data = undefined;
+						this.bus.post( sig2 );
+					}
+
 					break;
 				case 'IMPORTBRUSH':
 
@@ -832,6 +841,9 @@ class PaintAgent  {
 					var options = sig.data;
 					this.state.setShapeFillMode( options.fillMode );
 					this.state.setShapeBrushFlag( options.brush );
+				case "SETBUCKETFILLMODE":
+						var options = sig.data;
+						this.state.setBucketFillMode( options.bucketFillMode );
 			}
 		}
 	}

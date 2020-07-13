@@ -169,6 +169,7 @@ class PaintState {
     this.shapeFill = false;
     this.shapeFillMode = 'none';
     this.shapeWithBrush = true;
+    this.bucketFillMode = 0;
 
 		var i;
 		for (i = 1; i <= 64; i += 1) {
@@ -213,7 +214,7 @@ class PaintState {
 		this.drawFunctions['oval'] = new ovalDF( this.paintContext, this.overlay, false  );
     this.drawFunctions['square'] = new rectangleDF( this.paintContext, this.overlay, true  );
 		this.drawFunctions['circle'] = new ovalDF( this.paintContext, this.overlay, true  );
-		this.drawFunctions['fill'] = new fillFunction( this.paintContext , _SCRW, _SCRH, bus, this.overlay );
+		this.drawFunctions['fill'] = new fillFunctionExt( this.paintContext , _SCRW, _SCRH, bus, this.overlay );
 		this.drawFunctions['fill2'] = new fillFunction2( this.paintContext , _SCRW, _SCRH, bus, this.overlay );
 		this.drawFunctions['grabbrush'] = new grabFunction( this.paintContext , this.overlay, _SCRW, _SCRH );
     this.drawFunctions['magicgrabbrush'] = new magicAreaFunction( this.paintContext , this.overlay, _SCRW, _SCRH, bus );
@@ -341,6 +342,11 @@ class PaintState {
     this.shapeFill = (mode != "none");
     this.shapeFillMode = mode;
   }
+
+  setBucketFillMode( mode ) {
+    this.bucketFillMode = mode;
+  }
+
 
   setShapeBrushFlag( flag ) {
     this.shapeWithBrush = flag;

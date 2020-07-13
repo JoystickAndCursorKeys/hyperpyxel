@@ -354,7 +354,8 @@ class FigureFill {
       this.paintContext.fillStyle = this.fillColor;
 
       var mode = this.fillMode;
-      var distort = this.getDistortionFunction("expwarp2");
+      var distort = this.getDistortionFunction("expwarp3");//"expwarp2");
+      var distortfact = .6;
 
       if( mode == 'solid') {
 
@@ -434,19 +435,19 @@ class FigureFill {
             var myWidth1  =  (hl.maxx -  hl.minx) + 1;
             var myHeight2 =  areaH;
             var myWidth2  =  areaW;
+            var f1 = distortfact;
+            var f2 = 1-distortfact;
 
-            var byf1 = (y - l.miny ) / myHeight1;
+            var byf1 = (y - l.miny ) / myHeight1;  //wrapping
+            var byf2 = byf1;
             byf1 = distort( byf1 );
-            var byf2 = (y - lines.miny ) / myHeight2;
-            byf2 = distort( byf2 );
-            var byf = (byf1 + byf2) / 2;
+            var byf = (byf1 * f1 + byf2 * f2);
             var by = Math.floor( byf * (brushH-1) );
 
             var bxf1 = (x - hl.minx ) / myWidth1;
+            var bxf2 = bxf1;
             bxf1 = distort( bxf1 );
-            var bxf2 = (x - vlines.minx ) / myWidth2;
-            bxf2 = distort( bxf2 );
-            var bxf = (bxf1 + bxf2) / 2;
+            var bxf = (bxf1 * f1 + bxf2 * f2);
             var bx = Math.floor( bxf * (brushW-1) );
 
             var brXOffset = (bx * 4);
@@ -472,11 +473,17 @@ class FigureFill {
     if( mode == 'coswarp' ) {
       return this.coswarp;
     }
+    if( mode == 'cosinvwarp' ) {
+      return this.cosinvwarp;
+    }
     else if( mode == 'expwarp' ) {
       return this.expwarp;
     }
     else if( mode == 'expwarp2' ) {
       return this.expwarp2;
+    }
+    else if( mode == 'expwarp3' ) {
+      return this.expwarp3;
     }
     else if( mode == 'none' ) {
       return this.nowarp;
@@ -486,6 +493,15 @@ class FigureFill {
   nowarp( x ) {
     return x;
   }
+
+
+  cosinvwarp( x ) {
+
+    var pi=3.1415;
+    return ( Math.cos((x*pi) + pi ) / 2 ) + 0.5
+
+  }
+
 
   coswarp( x ) {
 
@@ -498,7 +514,7 @@ class FigureFill {
     }
   }
 
-  expwarp2( x ) {
+  expwarp( x ) {
     if( x < 0.5 ) {
       return (-(x-.5)*(x-.5)*2)+.5;
     }
@@ -515,7 +531,41 @@ class FigureFill {
     else  {
       w= ((x-.5)*(x-.5)*2)+.5;
     }
-    return ( w + x) / 2;
+    return ( w + 2*x) / 3;
+    //return ( w + x) / 2;
+  }
+
+
+
+  expwarp3_old( x ) {
+    var w;
+    if( x < 0.3 ) {
+      w= (-(x-.3)*(x-.3)*5.5555555)+.5;
+    }
+    else if( x >= 0.3 && x < 0.7) {
+      w = 0.5;
+    }
+    else  {
+      w= ((x-.7)*(x-.7)*5.5555555)+.5;
+    }
+    return ( 5*w + x) / 6;
+  }
+
+
+  expwarp3( x0 ) {
+    var w;
+    var x=0.1 + (0.8*x0);
+
+    if( x < 0.3 ) {
+      w= (-(x-.3)*(x-.3)*5.5555555)+.5;
+    }
+    else if( x >= 0.3 && x < 0.7) {
+      w = 0.5;
+    }
+    else  {
+      w= ((x-.7)*(x-.7)*5.5555555)+.5;
+    }
+    return ( 5*w + x) / 6;
   }
 
   getVLine( context, x, y0, h ) {
@@ -809,7 +859,6 @@ class rectangleDF extends DFTemplate {
 	}
 
 
-
   getXYBox( pState )  {
     console.log( "getX1Y1(circle="+this.symetric+")");
 
@@ -833,7 +882,6 @@ class rectangleDF extends DFTemplate {
         tdistYSign = Math.abs(tdistY) / tdistY;
       }
 
-
       var dist = Math.round( Math.sqrt( (tdistX * tdistX) + (tdistY * tdistY) ) );
 
       var x1b;
@@ -855,7 +903,6 @@ class rectangleDF extends DFTemplate {
 
 
 	mouseMove( pState ) {
-
 
     this.fill = pState.shapeFill;
     this.fillMode = pState.shapeFillMode;
