@@ -7,4 +7,4 @@ Side aim. Add a slight level of modern functionaliy into the mix.
 
 Check https://www.hyperpyxel.com
 
-Or <a href=http://hyperpyxel.com/online/>start painting</a> directly (not all browser supported, check main site for details)
+Or <a href=https://hyperpyxel.com/online/>start painting</a> directly (not all browser supported, check main site for details)
