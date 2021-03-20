@@ -306,6 +306,7 @@ class fillFunctionExt extends DFTemplate {
 		var y = pState.mouseState.y;
 
     this.bucketFillMode = pState.bucketFillMode;
+    this.gradient = pState.colorGradient;
 
     console.log("bucketFillMode=" + this.bucketFillMode);
     console.log("("+x+","+y+")");
@@ -393,6 +394,25 @@ class fillFunctionExt extends DFTemplate {
       findBrushPixels = true;
     }
 
+    var findColors = false;
+    var xcolFact = 0;
+    var ycolFact = 0;
+    if( this.bucketFillMode == 3 || this.bucketFillMode == 4 || this.bucketFillMode == 5 ) {
+      findColors = true;
+
+      if( this.bucketFillMode == 3 ) {
+        xcolFact = 1;
+      }
+      else if( this.bucketFillMode == 4 ) {
+        ycolFact = 1;
+      }
+      else if( this.bucketFillMode == 5 ) {
+        xcolFact = 1;
+        ycolFact = 1;
+      }
+    }
+
+
     if( findBrushPixels ) {
 
       var brushW = brush.w;
@@ -431,6 +451,11 @@ class fillFunctionExt extends DFTemplate {
     var list = this.mask.getPixelsAsList();
     var pixel = list.start();
 
+    //
+    this.mask.calculateVLines();
+    this.mask.calculateHLines();
+    var boundArea = this.mask.getArea();
+
     while( pixel ) {
 
       if( this.bucketFillMode == 1 ) {
@@ -464,7 +489,18 @@ class fillFunctionExt extends DFTemplate {
         _fillRgb[2] = brushIDVdata[brOffset + 2];
       }
 
+      if( findColors ) {
+        var xdims = this.mask.getLocalAreaXDims( pixel.x, pixel.y );
+        var ydims = this.mask.getLocalAreaYDims( pixel.x, pixel.y );
 
+        var xi = Math.floor( xdims.percent * (this.gradient.length) );
+        var yi = Math.round( ydims.percent * (this.gradient.length) );
+
+        _fillRgb[0] = this.gradient[ xi ].r * xcolFact + this.gradient[ yi ].r * ycolFact;
+        _fillRgb[1] = this.gradient[ xi ].g * xcolFact + this.gradient[ yi ].g * ycolFact;
+        _fillRgb[2] = this.gradient[ xi ].b * xcolFact + this.gradient[ yi ].b * ycolFact;
+
+      }
       //console.log( h );
       this.setPixel( pixel.x, pixel.y, _fillRgb );
 

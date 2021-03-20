@@ -151,6 +151,9 @@ class BareBrush {
 		else if( op == "BLACKANDWHITE") {
 			icc.changeSaturation( 0 );
 		}
+		else if( op == "NEGATIVE") {
+			icc.makeNegative();
+		}
 		else if( op == "SEPIA") {
 			icc.changeHue( 35 );
 			icc.changeSaturation( 0.7 );

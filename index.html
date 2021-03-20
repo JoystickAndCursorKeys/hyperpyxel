@@ -40,6 +40,11 @@
 		display: block;
 		}
 
+		textarea {
+  		width: 100%;
+  		height: 100vh;
+	  }
+
 	</style>
 
 
@@ -140,10 +145,14 @@
 
 <div class="outer" id="outerdiv">
   <div id="middlediv" class="middle">
+		<div id=exporttxt hidden ><input value="Close" type=button
+				onclick="document.getElementById( 'exporttxt' ).setAttribute('hidden','true'); booter.lockRMB();">
+				<textarea width=100% id=exporttxtdata></textarea>
+		</div>
     <div id="innerdiv" class="inner">
 		<canvas class='screenCanvas' id="screenCanvas" width="100%" height="100%" tabindex='1'></canvas>
 		<input hidden name="imageLoader" id="imageLoader" type="file" onclick="this.value=null;"></input>
-		<a hidden href=# name="imageSaver" id="imageSaver">Save</a>
+		<a width=100% hidden href=# name="imageSaver" id="imageSaver">Save</a>
     </div>
 
   </div>

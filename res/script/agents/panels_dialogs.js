@@ -350,6 +350,557 @@ class SelectResolutionDialog {
 
 }
 
+class 	ExportTileOptionsDialogPreview {
+
+	constructor ( w, h, parent, result ) {
+
+		this.w = w;
+		this.h = h;
+
+		this.col = 0;
+		this.row = 0;
+		this.result = result;
+		this.parent = parent;
+
+		this.maxCol = -1;
+		this.maxRow = -1;
+	}
+
+	setMaxDimensions( maxCol, maxRow  ) {
+		this.maxCol = maxCol;
+		this.maxRow = maxRow;
+
+		console.log( "maxCol " + this.maxCol + " maxRow " + this.maxRow );
+
+
+	}
+
+	draw( ctx, x, y ) {
+
+	  var size = 9;
+		var line = 0;
+	  var xoff = 4;
+	  var yoff = 4 + (size * 1.5);
+		var yoff0 = 4 + (size * 8);
+
+	  ctx.font = size + 'px arial';
+	  ctx.textBaseline  = 'bottom';
+	  ctx.fillStyle = "#000000";
+
+		var iW, iH;
+		iW = this.parent.tilesW;
+		iH = this.parent.tilesH;
+
+		var previewW = this.w *.48;
+		var previewH = this.h *.48;
+
+		if( this.parent.tilesW < previewW &&
+				this.parent.tilesH < previewH ) {
+					if( 2 * this.parent.tilesW < previewW &&
+							2 * this.parent.tilesH < previewH ) {
+									previewW = 2 * iW;
+									previewH = 2 * iH;
+					}
+					else {
+						previewW = this.iW;
+						previewH = this.iH;
+					}
+		}
+
+
+		var tmp = ctx.imageSmoothingEnabled;
+		ctx.imageSmoothingEnabled = false;
+
+		ctx.drawImage( this.parent.paintbuffer.canvas,
+			//src
+			this.parent.tilesW * this.result.colix,	this.parent.tilesH * this.result.rowix,
+			iW, iH,
+			//dst
+			x + xoff, y + yoff0,
+			previewW, previewH
+		);
+
+		ctx.imageSmoothingEnabled = tmp;
+
+		var w = this.w * .33 * .48;
+		var h = this.h * .33 * .75;
+
+		for( var yy = -1; yy < 2; yy++) {
+			for( var xx = -1; xx < 2; xx++) {
+				var X = xx + this.result.colix;
+				var Y = yy + this.result.rowix;
+				var xxoff = ((xx+1) * w) + 1 + xoff + x + (this.w *.48);
+				var yyoff = ((yy+1) * h) + 1 + yoff + y;
+
+				if( X < 0 || X > this.maxCol ||
+						Y < 0 || Y > this.maxRow ) {
+							ctx.fillStyle = "#88ee88";
+							ctx.fillRect( xxoff, yyoff, w, h );
+				}
+				else {
+					ctx.drawImage( this.parent.paintbuffer.canvas,
+						this.parent.tilesW * X,
+						this.parent.tilesH * Y,
+						iW, iH,
+						xxoff,yyoff,
+						w,h
+					);
+
+					if( xx == 0 && yy == 0) {
+							dmCMU.rect( ctx, xxoff,yyoff,
+													w,h,
+													'rgba(128,255,128,1)', 1 );
+
+					}
+				}
+			}
+		}
+		ctx.fillStyle = "#000000";
+
+		var tileInfo  = "Tile Size: " + this.parent.tilesW + "x" + this.parent.tilesH;
+
+		var tileIndex = "Select Tile: ????" ;
+
+		if( this.result.rangeType == 'range' ) {
+
+			tileIndex = "Selected Tiles: " +
+						"[" + this.result.range.scolix + "," + this.result.range.srowix + "] -> "+
+						"[" + this.result.range.ecolix + "," + this.result.range.erowix + "]";
+
+		}
+		else if( this.result.rangeType == 'single' ) {
+			tileIndex = "Selected Tile: " + this.result.colix + "," + this.result.rowix;
+		}
+
+
+
+		var colorInfo = " " + this.result.coldisplay;
+		var colorInfo2 = " " + this.result.coldisplay2;
+		var exportInfo =  "Export as: ";
+		var exportInfo2 =  " " + this.result.exportdatatype + " / " + this.result.exportdatapresentation;
+		var exportInfo3 =  " line starts at " + this.result.datastart + ",step " + this.result.datastep;
+
+		ctx.fillText( tileInfo, x + xoff, y + yoff + ( line * size) );
+		ctx.fillText( "Color Info:", x + xoff, y + yoff + ( (line + 1) * size) );
+		ctx.fillText( colorInfo, x + xoff, y + yoff + ( (line + 2) * size) );
+		ctx.fillText( colorInfo2, x + xoff, y + yoff + ( (line + 3) * size) );
+		ctx.fillText( exportInfo, x + xoff, y + yoff + ( (line + 4) * size) );
+		ctx.fillText( exportInfo2, x + xoff, y + yoff + ( (line + 5) * size) );
+		ctx.fillText( exportInfo3, x + xoff, y + yoff + ( (line + 6) * size) );
+
+
+		ctx.fillText( tileIndex, (this.w/2) + x + xoff, y + yoff + ( line * size) ); //line++;
+	}
+}
+
+
+
+function __ExportTileOptionsDialog_notblack( r, g, b ) {
+	return r + g + b > 0;
+}
+
+function __ExportTileOptionsDialog_iswhite( r, g, b ) {
+	return (r + g + b) == 255 * 3;
+}
+
+function __ExportTileOptionsDialog_getColorIndex( r, g, b, palette ) {
+	for( var i=0; i<palette.length && i<16 ; i++) {
+		var c = palette[ i ];
+		if( c.r == r && c.b == b && c.g == g ) {
+			return i;
+		}
+	}
+	return 0;
+}
+
+class ExportTileOptionsDialog {
+
+
+	constructor( _layout, _okdialogfunction, _renderFunction, _tileSettingsCallback, parent ) {
+
+		this.SCRW = _layout.scrW;
+		this.SCRH = _layout.scrH;
+		this.layout = _layout;
+		this.renderObj = _renderFunction.obj;
+		this.renderMethod = _renderFunction.method;
+		this.okObj = _okdialogfunction.obj;
+		this.okMethod = _okdialogfunction.method;
+		this.panel = null;
+		this.gridW = _layout.gridW;
+		this.gridH = _layout.gridH;
+
+		this.titleStyle = "bold 14px Arial";
+		this.groupStyle = "bold 12px Arial";
+		this.tileSettingsCallback = _tileSettingsCallback;
+
+		this.result={ rowix:0, colix:0,
+									rangeType: 'single',
+									range: { srowix:0, scolix:0, erowix:0, ecolix:0 },
+									gridW: 16, gridH: 16,
+									isOpaqueFunction: __ExportTileOptionsDialog_notblack,
+									getColorIndexFunction: undefined,
+									exportdatatype: 'basic',
+									exportdatapresentation: 'decimal'
+								};
+
+		this.parent = parent;
+
+		this.setFunNotBlack();
+		this.setBasicDataDec();
+		this.setBasicLN5000Step1();
+
+	}
+
+
+	popUp() {
+		var row = 0;
+		var b=[], id=0;
+		var panel = new Dialog(
+			"ExportTileOptionsDialog",
+			"Export Tile Options (Monochrome)",
+			this.SCRW, this.SCRH,
+			335 , 485,
+			this.gridW, this.gridH,
+			this, "popDown",
+			this.renderObj, this.renderMethod
+		);
+
+		var infoW = 13, infoH = 5;
+
+		this.previewRenderer =
+				new ExportTileOptionsDialogPreview(
+					infoW * this.gridW,
+					infoH * this.gridH,
+					this.parent,
+					this.result );
+
+		this.previewArea = new ToolButton( id++, 			PANEL_LEFTALIGN,row,
+					infoW, infoH ,  PPAINTR_BTYPE_INFOAREA, {robj: this.previewRenderer },  null, null, null )
+
+		this.previewArea.noborder = false;
+
+		b.push( this.previewArea );
+		row+=(infoH);
+
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row, 4.5  ));
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			2, 1,
+			PPAINTR_BTYPE_CLICK,
+			{txt: "Up", txtStyle: "12px Arial" }  ,
+			null, this,  'rowMin'
+		));
+		row++;
+
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row, 4.5  ));
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			2, 1,
+			PPAINTR_BTYPE_CLICK,
+			{txt: "Down", txtStyle: "12px Arial" }  ,
+			null, this,  'rowPlus'
+		));
+		row++;
+
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row, 1.5  ));
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			4, 1,
+			PPAINTR_BTYPE_CLICK,
+			{txt: "<---", txtStyle: "12px Arial" }  ,
+			null, this,  'colMin'
+		));
+
+
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			4, 1,
+			PPAINTR_BTYPE_CLICK,
+			{txt: "--->", txtStyle: "12px Arial" }  ,
+			null, this,  'colPlus'
+		));
+
+		row++;
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row  ));
+		row++;
+
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			3.75, 1,
+			PPAINTR_BTYPE_TOGGLE,
+			{txt: "Single" }  ,
+			"expselect", this,  'setTileModeSingle'
+		));
+
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			3.75, 1,
+			PPAINTR_BTYPE_TOGGLE,
+			{txt: "Start Range" }  ,
+			"expselect", this,  'setTileModeRangeStart'
+		));
+
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			3.75, 1,
+			PPAINTR_BTYPE_TOGGLE,
+			{txt: "End Range" }  ,
+			"expselect", this,  'setTileModeRangeEnd'
+		));
+
+		row++;
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row  ));
+		row++;
+
+		b.push( new Button(   this.id++,
+			PANEL_LEFTALIGN,row,
+			4.75, 1,
+			PPAINTR_BTYPE_CLICK,
+			{txt: "Change Tile Size" }  ,
+			null, this,  'tileSettings'
+		));
+
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row  ));
+		//row++;
+
+		var	buttonDefs;
+		var menumanager;
+
+		buttonDefs = [];
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Basic, 'DATA' Decimal" },     callfunction: [this, 'setBasicDataDec'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Basic, 'DATA' Hexadecimal" },     callfunction: [this, 'setBasicDataHex'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Basic, 'DATA' Decimal with comment" },     callfunction: [this, 'setBasicDataDecRem'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Basic, 'DATA' Hexadecimal with comment" },     callfunction: [this, 'setBasicDataHexRem'] } );
+
+		var format = new ToolButton( id++, PANEL_LEFTALIGN,row, 4.75, 1,  PPAINTR_BTYPE_CLICK, {txt:"Export Format" },  null, null,null );
+		menumanager =  new MenuManager( "menu:format",  this.gridW * 12, this.gridH,
+									buttonDefs, this.renderObj, this.renderMethod );
+		format.addMenuManager( menumanager );
+		b.push( format );
+		row++;
+
+		buttonDefs = [];
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"2 Colors - Not Black as Foreground" },     callfunction: [this, 'setFunNotBlack'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"2 Colors - White as Foreground" },      callfunction: [this, 'setFunIsWhite'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"16 Colors" },  callfunction: [this, 'setFun16Color'] } );
+
+		var quickpalette = new ToolButton( id++, PANEL_LEFTALIGN,row, 4.75, 1,  PPAINTR_BTYPE_CLICK, {txt:"Color Format" },  null, null,null );
+		menumanager =  new MenuManager( "menu:managequickpalette",  this.gridW * 10, this.gridH,
+									buttonDefs, this.renderObj, this.renderMethod );
+		quickpalette.addMenuManager( menumanager );
+		b.push( quickpalette );
+		b.push( new Separator(   this.id++,	PANEL_LEFTALIGN,row  ));
+
+
+		buttonDefs = [];
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"1000 step 1" },     callfunction: [this,  'setBasicLN1000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"1000 step 10" },     callfunction: [this, 'setBasicLN1000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"2000 step 1" },     callfunction: [this,  'setBasicLN2000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"2000 step 10" },     callfunction: [this, 'setBasicLN2000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"3000 step 1" },     callfunction: [this,  'setBasicLN3000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"3000 step 10" },     callfunction: [this, 'setBasicLN3000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"4000 step 1" },     callfunction: [this,  'setBasicLN4000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"4000 step 10" },     callfunction: [this, 'setBasicLN4000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"5000 step 1" },     callfunction: [this,  'setBasicLN5000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"5000 step 10" },     callfunction: [this, 'setBasicLN5000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"6000 step 1" },     callfunction: [this,  'setBasicLN6000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"6000 step 10" },     callfunction: [this, 'setBasicLN6000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"7000 step 1" },     callfunction: [this,  'setBasicLN7000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"7000 step 10" },     callfunction: [this, 'setBasicLN7000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"8000 step 1" },     callfunction: [this,  'setBasicLN8000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"8000 step 10" },     callfunction: [this, 'setBasicLN8000Step10'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"9000 step 1" },     callfunction: [this,  'setBasicLN9000Step1'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"9000 step 10" },     callfunction: [this, 'setBasicLN9000Step10'] } );
+
+		var format = new ToolButton( id++, PANEL_LEFTALIGN,row, 4.75, 1,  PPAINTR_BTYPE_CLICK, {txt:"Line Numbers" },  null, null,null );
+		menumanager =  new MenuManager( "menu:format",  this.gridW * 8, this.gridH,
+									buttonDefs, this.renderObj, this.renderMethod );
+		format.addMenuManager( menumanager );
+		b.push( format );
+
+		this.calculateMaxDimensions();
+
+		panel.setButtons( b, "root" );
+		panel.placeButtons();
+
+		this.panel = panel;
+		this.layout.addDialog( this.panel );
+	}
+
+	setTileModeSingle() {
+		this.result.rangeType='single';
+	}
+
+	setTileModeRangeStart() {
+		this.result.rangeType='range';
+		this.rangeSelect='start';
+		this.updateRange();
+	}
+
+	setTileModeRangeEnd() {
+		this.result.rangeType='range';
+		this.rangeSelect='end';
+		this.updateRange();
+	}
+
+	updateRange() {
+		if( this.result.rangeType == 'range' ) {
+			if( this.rangeSelect == 'start' ) {
+				this.result.range.srowix = this.result.rowix;
+				this.result.range.scolix = this.result.colix;
+				this.render();
+			}
+			else if( this.rangeSelect == 'end' ) {
+				this.result.range.erowix = this.result.rowix;
+				this.result.range.ecolix = this.result.colix;
+				this.render();
+			}
+			else if( this.rangeSelect == 'single' ) {
+				this.result.range.srowix = this.result.rowix;
+				this.result.range.scolix = this.result.colix;
+				this.result.range.erowix = this.result.rowix;
+				this.result.range.ecolix = this.result.colix;
+			}
+
+		}
+	}
+
+	setFunNotBlack() {
+		this.result.colormode = "1bpp";
+		this.result.coldisplay = "2 colors";
+		this.result.coldisplay2 = "foreground='non black pixels'";
+		this.result.isOpaqueFunction = __ExportTileOptionsDialog_notblack;
+		this.result.getColorIndexFunction = undefined;
+		this.render();
+	}
+
+	setFunIsWhite() {
+		this.result.colormode = "1bpp";
+		this.result.coldisplay = "2 colors";
+		this.result.coldisplay2 = "foreground='white pixels'";
+		this.result.isOpaqueFunction = __ExportTileOptionsDialog_iswhite;
+		this.result.getColorIndexFunction = undefined;
+		this.render();
+	}
+
+	setFun16Color() {
+		this.result.colormode = "4bpp";
+		this.result.coldisplay = "16 colors";
+		this.result.coldisplay2 = "background='color 0'";
+		this.result.getColorIndexFunction = __ExportTileOptionsDialog_getColorIndex;
+		this.result.isOpaqueFunction = undefined;
+		this.render();
+	}
+
+	setBasicLN1000Step1()  	{ this.setBasicDataInfo( 1000, 1 ); }
+	setBasicLN1000Step10()  { this.setBasicDataInfo( 1000, 10 ); }
+	setBasicLN2000Step1()  	{ this.setBasicDataInfo( 2000, 1 ); }
+	setBasicLN2000Step10()  { this.setBasicDataInfo( 2000, 10 ); }
+	setBasicLN3000Step1()  	{ this.setBasicDataInfo( 3000, 1 ); }
+	setBasicLN3000Step10()  { this.setBasicDataInfo( 3000, 10 ); }
+	setBasicLN4000Step1()  	{ this.setBasicDataInfo( 4000, 1 ); }
+	setBasicLN4000Step10()  { this.setBasicDataInfo( 4000, 10 ); }
+	setBasicLN5000Step1()  	{ this.setBasicDataInfo( 5000, 1 ); }
+	setBasicLN5000Step10()  { this.setBasicDataInfo( 5000, 10 ); }
+	setBasicLN6000Step1()  	{ this.setBasicDataInfo( 6000, 1 ); }
+	setBasicLN6000Step10()  { this.setBasicDataInfo( 6000, 10 ); }
+	setBasicLN7000Step1()  	{ this.setBasicDataInfo( 7000, 1 ); }
+	setBasicLN7000Step10()  { this.setBasicDataInfo( 7000, 10 ); }
+	setBasicLN8000Step1()  	{ this.setBasicDataInfo( 8000, 1 ); }
+	setBasicLN8000Step10()  { this.setBasicDataInfo( 8000, 10 ); }
+	setBasicLN9000Step1()  	{ this.setBasicDataInfo( 9000, 1 ); }
+	setBasicLN9000Step10()  { this.setBasicDataInfo( 9000, 10 ); }
+
+	setBasicDataDec() {
+		this.result.exportdatatype = 'basic';
+		this.result.exportdatapresentation = 'decimal';
+		this.result.comment = false;
+		this.render();
+	}
+
+	setBasicDataHex() {
+		this.result.exportdatatype = 'basic';
+		this.result.exportdatapresentation = 'hexadecimal';
+		this.result.comment = false;
+		this.render();
+	}
+
+	setBasicDataDecRem() {
+		this.result.exportdatatype = 'basic+comment';
+		this.result.exportdatapresentation = 'decimal';
+		this.result.comment = true;
+		this.render();
+	}
+
+	setBasicDataHexRem() {
+		this.result.exportdatatype = 'basic+comment';
+		this.result.exportdatapresentation = 'hexadecimal';
+		this.result.comment = true;
+		this.render();
+	}
+
+
+	setBasicDataInfo( x, y ) {
+		this.result.datastart = x; this.result.datastep = y;
+		this.render();
+	}
+
+	popDown( ok ) {
+
+		if( ok ) {
+
+			var saveOption = this.panel.getToggleButtonId( "options" );
+
+			this.okObj[ this.okMethod ]( this.result );
+		}
+
+		this.layout.removeDialog( this.panel.id );
+		this.panel = null;
+
+		this.renderObj[ this.renderMethod ]( this.result );
+	}
+
+	calculateMaxDimensions() {
+
+		this.maxCols = Math.floor( this.parent.infoRenderer.imgW / this.parent.tilesW );
+		this.maxRows = Math.floor( this.parent.infoRenderer.imgH / this.parent.tilesH );
+
+		console.log( "maxCols " + this.maxCols + " maxRows " + this.maxRows );
+
+		this.previewRenderer.setMaxDimensions( this.maxCol(), this.maxRow() );
+	}
+
+	maxRow() {return this.maxRows - 1;}
+	maxCol() {return this.maxCols - 1;}
+
+	rowMin() 	{ this.result.rowix--; if( this.result.rowix < 0) { this.result.rowix = 0; } ; this.updateRange(); this.render();}
+	rowPlus() { this.result.rowix++; if( this.result.rowix > this.maxRow()) { this.result.rowix = this.maxRow(); } ; this.updateRange();  this.render();}
+	colMin() 	{ this.result.colix--; if( this.result.colix < 0) { this.result.colix = 0; } ; this.updateRange(); this.render();}
+	colPlus() { this.result.colix++; if( this.result.colix > this.maxCol()) { this.result.colix = this.maxCol(); } ; this.updateRange(); this.render();}
+
+	render() {
+		if( !this.previewArea ) { return; }
+		this.previewArea.renderButton();
+	}
+
+	tileSettings() {
+		console.log("_tileSettings");
+		this.tileSettingsCallback.obj[
+			this.tileSettingsCallback.method
+		]( { obj: this, method: 'tileSettingsOk' });
+	}
+
+	tileSettingsOk( result ) {
+		console.log("_tileSettingsOk", result);
+		this.tileSettingsCallback.obj[
+			this.tileSettingsCallback.methodOk
+		]( result );
+
+		this.calculateMaxDimensions();
+		this.render();
+	}
+}
+
 
 class SavePictureOptionsDialog {
 
@@ -483,7 +1034,7 @@ class SavePictureOptionsDialog {
 
 class tilesSettingsDialog {
 
-	constructor( _layout, _okdialogfunction, _renderFunction, tilew, tileh ) {
+	constructor( _layout, _okdialogfunction, _renderFunction, tilew, tileh, _icons ) {
 
 			this.id = 0;
 
@@ -508,6 +1059,7 @@ class tilesSettingsDialog {
 			this.panel = null;
 			this.gridW = _layout.gridW;
 			this.gridH = _layout.gridH;
+			this.icons = _icons;
 
 			this.titleStyle = "bold 14px Arial";
 			this.groupStyle = "bold 12px Arial";
@@ -517,8 +1069,11 @@ class tilesSettingsDialog {
 			this.integerValueW = tilew;
 			this.integerValueH = tileh;
 
-			this.valueW = new SliderButtonValue( this.integerValueW, 16, 255, 1 );
-			this.valueH = new SliderButtonValue( this.integerValueH, 16, 255, 1 );
+			this.valueW = new SliderButtonValue( this.integerValueW, 8, 256, 1 );
+			this.valueH = new SliderButtonValue( this.integerValueH, 8, 256, 1 );
+
+			this.sliderX = null;
+			this.sliderY = null;
 
 
 		}
@@ -531,7 +1086,7 @@ class tilesSettingsDialog {
 				"TileSettingsDialog" + this.id++,
 				"Tile Settings",
 				this.SCRW, this.SCRH,
-				350 , 4*this.gridH ,
+				350 , 9*this.gridH ,
 				this.gridW, this.gridH,
 				this, "popDown",
 				this.renderObj, this.renderMethod
@@ -551,12 +1106,14 @@ class tilesSettingsDialog {
 			b.push( buttn	);
 			b.push( new Separator( this.id++, PANEL_LEFTALIGN, row ) );
 
-			b.push(
+			this.sliderX =
 					new SliderButton( "YesNoDialogSlider" + this.id++,
 					 	PANEL_LEFTALIGN,row,
 						8, .5,
 						PPAINTR_BTYPE_HSLIDER,
-						this.valueW, null, null ));
+						this.valueW, null, null );
+
+			b.push( this.sliderX );
 
 			row++;
 
@@ -572,13 +1129,112 @@ class tilesSettingsDialog {
 
 			b.push( new Separator( this.id++, PANEL_LEFTALIGN, row ) );
 
-			b.push(
+			this.sliderY =
 					new SliderButton( "TilesSettings" + this.id++,
 					 	PANEL_LEFTALIGN,row,
 						8, .5,
 						PPAINTR_BTYPE_HSLIDER,
-						this.valueH, null, null ));
+						this.valueH, null, null );
 
+			b.push( this.sliderY );
+
+			row++; row++;
+
+			var buttnWidth = 3.8;
+			b.push(
+				new Button(
+						"8x8",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '8x8', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			b.push(
+				new Button(
+						"16x16",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '16x16', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			b.push(
+				new Button(
+						"24x24",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '24x24', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			row++;
+			b.push(
+				new Button(
+						"32x32",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '32x32', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			b.push(
+				new Button(
+						"48x48",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '48x48', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			b.push(
+				new Button(
+						"64x64",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '64x64', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			row++;
+			b.push(
+				new Button(
+						"128x128",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '128x128', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+			b.push(
+				new Button(
+						"256x256",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '256x256', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
+
+			row++;
+			b.push(
+				new Button(
+						"24x21",
+						PANEL_LEFTALIGN,row,
+						buttnWidth, .85,
+						PPAINTR_BTYPE_CLICK,
+						{txt: '24x21', ico: this.icons['tiles'] },
+						null, this, 'setSizes'
+				)
+			);
 		  panel.setButtons( b, "root" );
 
 			panel.placeButtons();
@@ -605,6 +1261,20 @@ class tilesSettingsDialog {
 			this.panel = null;
 
 			this.renderObj[ this.renderMethod ];
+		}
+
+
+		setSizes( method, buttnId ) {
+
+			var wh = buttnId.split("x");
+
+			this.valueW.setValue( wh[0] );
+			this.sliderX.renderButton();
+
+			this.valueH.setValue( wh[1] );
+			this.sliderY.renderButton();
+
+
 		}
 }
 
@@ -910,7 +1580,7 @@ class paletteEditDialog {
 			this.panel = null;
 			this.gridW = _layout.gridW;
 			this.gridH = _layout.gridH;
-			this.icons = _icons;
+			this.icons =_icons;
 
 			this.titleStyle = "bold 14px Arial";
 			this.groupStyle = "bold 12px Arial";

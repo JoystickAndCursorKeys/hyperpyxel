@@ -136,6 +136,38 @@ class ImageMask {
     return null;
   }
 
+
+  findYRange2( ranges, y ) {
+    var result = { rangePercents: [] };
+    var totalRange = 0;
+    var rangeSize;
+    var foundRangeIx = -1;
+    var foundRangeSizeBefore = -1;
+    var foundRangeSize = -1;
+
+    for( var i=0; i<ranges.length; i++) {
+      var r=ranges[i];
+      rangeSize = ( r.y1 - r.y0 ) - 1;
+
+      if( y>=r.y0 && y<=r.y1 ) {
+        result.range = r;
+        foundRangeIx = i;
+        foundRangeSizeBefore = totalRange;
+        foundRangeSize = rangeSize;
+      }
+      totalRange += range;
+    }
+
+    result.startTotal = foundRangeSizeBefore;
+    result.currentSize = foundRangeSize
+    result.totalSize = totalRange;
+    result.sizeAfter = totalRange;
+    result.rangeIx = foundRangeIx;
+
+    return null;
+  }
+
+
   getLocalAreaXDims( x, y ) {
 
     var lines = this.hLines[ y ];
@@ -145,9 +177,9 @@ class ImageMask {
       return null;
     }
 
-    var w = (xline.x1 - xline.x0) + 1;
+    var w = ( xline.x1 - xline.x0 ) + 1;
     var dist = x - xline.x0;
-    var percent = (dist / w);
+    var percent = (dist / w );
 
     return { x0: xline.x0, x1: xline.x1, w: w, percent: percent };
   }
