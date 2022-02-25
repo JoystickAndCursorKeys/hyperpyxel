@@ -170,17 +170,6 @@ class PaintState {
     this.shapeFillMode = 'none';
     this.shapeWithBrush = true;
     this.bucketFillMode = 0;
-    this.colorGradient = [];
-
-    // TODO FIX
-
-    var cb = new ColorBox();
-    var extra;
-    this.colorGradient = cb.makeGradient( {r:255,g:255,b:255}, {r:0,g:0,b:0}, 500);
-    extra = cb.makeAdditionalGradient( {r:0,g:0,b:0}, {r:0,g:0,b:128}, 100);
-    this.colorGradient = this.colorGradient.concat( extra );
-    extra = cb.makeAdditionalGradient( {r:0,g:0,b:128}, {r:0, g:0, b:64},  100);
-    this.colorGradient = this.colorGradient.concat( extra );
 
 		var i;
 		for (i = 1; i <= 64; i += 1) {
@@ -242,12 +231,7 @@ class PaintState {
 
     this.paintMode = new PaintMode();
     this.paintMode.setContext(this.paintContext);
-
-    //this.bus = bus;
-
-
 	}
-
 
   functionNeedsTimer() {
       if( this.drawFunctionName == 'spray'  ) {
@@ -324,8 +308,6 @@ class PaintState {
       throw "Buffer size of 0 detected";
     }
     this.paintContextBuffer.drawImage( this.paintCanvas ,0,0 );
-
-
 
   }
 
@@ -417,6 +399,13 @@ class PaintState {
 
 			this.paintContext.drawImage( tmpCanvas ,0,0 );
 			this.paintContextBuffer.drawImage( tmpCanvas ,0,0 );
+
+//      tmpContext.drawImage( this.paintContextScratchBuffer ,0,0 );
+
+//			this.paintCanvasScratchBuffer.width  = w;
+//			this.paintCanvasScratchBuffer.height = h;
+
+//			this.paintContextScratchBuffer.drawImage( tmpCanvas ,0,0 );
 
 			tmpCanvas = null;
 			tmpContext = null;

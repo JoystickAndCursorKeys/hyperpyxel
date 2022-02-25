@@ -324,77 +324,6 @@ class ColorBox {
 		};
 	}
 
-	makeGradient( colFrom, colTo, colorCount ) {
-
-			var rgbFrom = colFrom;
-			var rgbTo = colTo;
-
-			var rD = (rgbTo.r - rgbFrom.r ) / (colorCount-1);
-			var gD = (rgbTo.g - rgbFrom.g ) / (colorCount-1);
-			var bD = (rgbTo.b - rgbFrom.b ) / (colorCount-1);
-
-			var rr = rgbFrom.r;
-			var gg = rgbFrom.g;
-			var bb = rgbFrom.b;
-
-			var gradient = [];
-
-			for( var ci = 0; ci< colorCount; ci++  ) {
-
-				console.log( "ci=" + ci );
-
-				var newRGB = {
-					r: Math.round(rr),
-					g: Math.round(gg),
-					b: Math.round(bb)
-				}
-
-				gradient.push( newRGB );
-
-				rr += rD;
-				gg += gD;
-				bb += bD;
-			}
-
-			return gradient;
-	}
-
-
-	makeAdditionalGradient( colFrom, colTo, colorCount ) {
-
-			var rgbFrom = colFrom;
-			var rgbTo = colTo;
-
-			var rD = (rgbTo.r - rgbFrom.r ) / (colorCount);
-			var gD = (rgbTo.g - rgbFrom.g ) / (colorCount);
-			var bD = (rgbTo.b - rgbFrom.b ) / (colorCount);
-
-			var rr = rgbFrom.r + rD;
-			var gg = rgbFrom.g + gD;
-			var bb = rgbFrom.b + bD;
-
-			var gradient = [];
-
-			for( var ci = 0; ci< colorCount; ci++  ) {
-
-				console.log( "ci=" + ci );
-
-				var newRGB = {
-					r: Math.round(rr),
-					g: Math.round(gg),
-					b: Math.round(bb)
-				}
-
-				gradient.push( newRGB );
-
-				rr += rD;
-				gg += gD;
-				bb += bD;
-			}
-
-			return gradient;
-	}
-
 }
 
 class ImageCanvasContext  {
@@ -652,50 +581,6 @@ class ImageCanvasContext  {
 						imgCtxCanv.setAllData( dstIData );
 	}
 
-	makeNegative() {
-		var imgCtxCanv = this;
-		var tmpImgCtxCanv = imgCtxCanv.copy( );
-
-		var w=tmpImgCtxCanv.w;
-		var h=tmpImgCtxCanv.h;
-		var srcIData = tmpImgCtxCanv.getCopyAllData();
-		var dstIData = imgCtxCanv.getCopyAllData();
-		var srcData = srcIData.data;
-		var dstData = dstIData.data;
-
-		var yoffset = 0;
-		var yoffsetmin = 0;
-		var rowSize = w*4;
-
-		var colorBox = new ColorBox();
-
-		for( var y=0; y<h; y++ ) {
-
-			for( var x=0; x<w; x++) {
-
-				var offset = yoffset + (x * 4);
-
-				if( srcData[ offset + 3] == 0) {
-					continue;
-				}
-
-				var r,g,b;
-				r = srcData[ offset + 0];
-				g = srcData[ offset + 1];
-				b = srcData[ offset + 2];
-
-				dstData[ offset + 0]= 255 - r;
-				dstData[ offset + 1]= 255 - g;
-				dstData[ offset + 2]= 255 - b;
-
-			}
-
-			yoffset+= ( rowSize );
-		}
-
-		imgCtxCanv.setAllData( dstIData );
-
-	}
 
 	changeSaturation( level ) {
 

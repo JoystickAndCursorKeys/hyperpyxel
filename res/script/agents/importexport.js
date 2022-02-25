@@ -49,13 +49,15 @@ class ImgUploader {
 
 			}
 
+			console.log( event.target.result );
 			img.src = event.target.result;
 		}
 
 		console.log("read " + e.target.files[0]);
 		console.log(e.target.files[0]);
-		reader.readAsDataURL(e.target.files[0]);
+		reader.readAsDataURL(e.target.files[0]); //this is the original
 
+		//reader.readAsArrayBuffer(e.target.files[0]); //petscii
 	}
 
 }
@@ -105,6 +107,9 @@ class ImportExportAgent  {
 				case 'SAVE':
 					this.save( sig.data.canvas, sig.data.options, sig.data.name );
 				break;
+				case 'PRINT':
+					this.print( sig.data.canvas, sig.data.options, sig.data.name  );
+				break;
 			}
 		}
 	}
@@ -124,6 +129,208 @@ class ImportExportAgent  {
 		  //http://danml.com/download.html
 
 
+	}
+
+	dataPresentation( byte, isBasic, format ) {
+		if( format == 'decimal' ) {
+			return byte;
+		}
+		else if( format == 'hexadecimal' ) {
+			var hex = byte.toString( 16 );
+			if (hex.length < 2) {
+				hex = "0" + hex;
+			}
+			if( isBasic ) { return "$" + hex; }
+			return "0x"+hex;
+		}
+		return "?undefined?" + byte
+	}
+
+
+	print( _canvas, options ) {
+		var sourceCanvas = _canvas;
+
+		var gridW, gridH;
+		gridW = options.coordinates.tilesW;
+		gridH = options.coordinates.tilesH;
+		var row = options.datastart;
+		var dataString = "";
+		var isBasic = true;
+
+		console.log( "print", options)
+		var bytes = "";
+
+		if( options.exportdatatype.startsWith( "basic" ) ) {
+			dataString = "data";
+		}
+
+		if( options.exportdatatype.startsWith( "[]array" ) ) {
+			var w = (options.coordinates.range.ecolix - options.coordinates.range.scolix)+1;
+			var h = (options.coordinates.range.erowix - options.coordinates.range.srowix)+1;
+			bytes = "\n[\n\t /* " + w + "x" + h + " */";
+			isBasic = false;
+		}
+
+		if( options.exportdatatype == 'basic+comment' ) {
+				bytes = row +" rem put your comment here";
+				row += options.datastep;
+
+		}
+
+		var isFirst = true;
+		
+		for(
+				var rowIx=options.coordinates.range.srowix ;
+				rowIx<=options.coordinates.range.erowix ;
+				rowIx++ )
+		{
+				for( var xi=options.coordinates.range.scolix ; xi<=options.coordinates.range.ecolix ; xi++ ) {
+
+					var colIx = xi;
+
+					if( options.mode == '1bpp' ) {
+						var sdbg=1;
+
+						var copy = new ImageCanvasContext();
+						copy.initNewCanvas( gridW, gridH );
+
+						//grab the context from your destination canvas
+						var destCtx = copy.context;
+
+
+						//void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+						var xoff, yoff;
+
+						xoff = colIx * gridW;
+						yoff = rowIx * gridH;
+
+						destCtx.drawImage( sourceCanvas,
+							xoff, yoff, gridW, gridH, 0, 0, gridW, gridH );
+
+						var data = copy.getCopyAllData().data;
+
+						var byte = 0; var bitval=1; var bitval2=128;
+
+						var newline = true;
+						var lineCnt =0;
+
+						var maxOnLine = 21;
+
+
+						for( var i = 0; i<data.length; i+=4 ) {
+
+							if( options.isOpaqueFunction( data[ i ], data [ i + 1 ], data[ i + 2] )  ) {
+								byte += bitval2;
+							}
+
+							bitval *=2;
+							bitval2 = bitval2 / 2;
+							if( bitval > 128 ) {
+								bitval = 1;
+								bitval2 = 128;
+								if( !newline ) {
+									bytes = bytes + ", ";
+								}
+								else {
+									if( isBasic ) {
+											bytes = bytes + "\n" + row + " data ";
+									}
+									else {
+											if( !isFirst ) {
+												bytes = bytes + ",\n " ;
+											}
+											else {
+												bytes = bytes + "\n " ;
+												isFirst = false;
+											}
+									}
+
+									row += options.datastep;
+									newline = false;
+								}
+								bytes = bytes + this.dataPresentation( byte, isBasic, options.exportdatapresentation );
+								byte = 0;
+								lineCnt++;
+								newline = false;
+								if( lineCnt >= maxOnLine){
+									lineCnt=0;
+									newline = true;
+								}
+
+
+							}
+						}
+						var edbg=1;
+					}
+					else if( options.mode == '4bpp' ) {
+
+						var copy = new ImageCanvasContext();
+						copy.initNewCanvas( gridW, gridH );
+
+						var colorPalette = options.colorPalette;
+
+						//grab the context from your destination canvas
+						var destCtx = copy.context;
+
+
+						//void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+						var xoff, yoff;
+
+						xoff = colIx * gridW;
+						yoff = rowIx * gridH;
+
+						destCtx.drawImage( sourceCanvas,
+							xoff, yoff, gridW, gridH, 0, 0, gridW, gridH );
+
+						var data = copy.getCopyAllData().data;
+
+						var byte = 0; var bitval=1; var bitval2=128;
+
+						var newline = true;
+						var lineCnt =0;
+						var maxOnLine = 8;
+						for( var i = 0; i<data.length; i+=8 ) {
+
+							var highNibble = options.getColorIndexFunction( data[ i ], data [ i + 1 ], data[ i + 2] , colorPalette)  ;
+							var lowNibble = options.getColorIndexFunction( data[ i + 4 ], data [ i + 4 + 1 ], data[ i + 4 + 2] , colorPalette );
+							byte = lowNibble + (highNibble * 16);
+
+							if( !newline ) {
+									bytes = bytes + ", ";
+							}
+							else {
+									if( isBasic ) {
+											bytes = bytes + "\n" + row + " data ";
+									}
+									else {
+											bytes = bytes + ",\n ";
+									}
+									row += options.datastep;
+									newline = false;
+							}
+
+							bytes = bytes + this.dataPresentation( byte, isBasic, options.exportdatapresentation );
+							lineCnt++;
+							newline = false;
+							if( lineCnt >= maxOnLine){
+								lineCnt=0;
+								newline = true;
+							}
+						}
+					}
+			}
+		}
+
+		if( options.exportdatatype.startsWith( "[]array" ) ) {
+			bytes += "\n];\n";
+		}
+
+		var imageTxtOut = document.getElementById( "exporttxt" ); //this.imageLoader );
+		var imageTxtOutData = document.getElementById( "exporttxtdata" ); //this.imageLoader );
+		imageTxtOut.removeAttribute("hidden");
+		imageTxtOutData.value = bytes;
+
+		booter.releaseRMB();
 	}
 
 

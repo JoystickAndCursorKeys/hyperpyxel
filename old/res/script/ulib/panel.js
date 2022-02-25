@@ -534,14 +534,8 @@ constructor( id, x,y, w, h,  type, drawMethod, group, handlerobject, handlermeth
 
 class Separator extends Button {
 
-	constructor( id, x,y, _w, _h ) {
-		var w,h;
-		w = _w;
-		h = _h;
-		if( w == undefined ) { w = PPAINTR_SEPARATOR_CONST_DIST; }
-		if( h == undefined ) { h = 1; }
-
-		super( id, x,y, w, h,  PPAINTR_BTYPE_SEPARATOR, null,  null, null, null );
+	constructor( id, x,y ) {
+		super( id, x,y, PPAINTR_SEPARATOR_CONST_DIST, 1,  PPAINTR_BTYPE_SEPARATOR, null,  null, null, null );
 	}
 
 	setWidth( w ) {

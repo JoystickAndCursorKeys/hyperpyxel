@@ -1,17 +1,4 @@
-function __fBootPreventDefault( event ) {
-	return event.preventDefault();
-}
-
 class Boot {
-
-
-	lockRMB() {
-		document.addEventListener('contextmenu', __fBootPreventDefault );
-	}
-
-	releaseRMB() {
-		document.removeEventListener('contextmenu', __fBootPreventDefault );
-	}
 
 	constructor ( _renderCanvasId, _Loader, _Saver, _SCRW, _SCRH ) {
 
@@ -20,7 +7,7 @@ class Boot {
   		return "";
 		}
 
-		this.lockRMB();
+		document.addEventListener('contextmenu', event => event.preventDefault());
 
 		var constants = {};
 

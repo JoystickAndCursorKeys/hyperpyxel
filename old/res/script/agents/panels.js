@@ -219,10 +219,7 @@ class PanelsAgent {
 		panelIcons['fillbrush'] = new PanelIcon( iisButtons1c, 9 );
 		panelIcons['fillbrushstretch'] = new PanelIcon( iisButtons1c, 10 );
 		panelIcons['fillbrushwrap'] = new PanelIcon( iisButtons1c, 11 );
-		panelIcons['fillcolorsgradientx'] = new PanelIcon( iisButtons1c, 12 );
-		panelIcons['fillcolorsgradienty'] = new PanelIcon( iisButtons1c, 13 );
-		panelIcons['fillcolorsgradientxy'] = new PanelIcon( iisButtons1c, 14 );
-		panelIcons['negative'] = new PanelIcon( iisButtons1c, 15 );
+
 
 		this.buttn_maxcol = 32;
 		this.buttn_huefact = 360 / (this.buttn_maxcol + 1);
@@ -243,7 +240,6 @@ class PanelsAgent {
 
 		this.updatePaletteRec = { obj: this, method: 'changePalette' };
 		this.defaultPalette = new PaletteImage( "res/img/palette/default.png" , 1, this.updatePaletteRec );
-		this.c64Palette = new PaletteImage( "res/img/palette/c64.png" , 1, null);
 
 		var rgb;
 		for (var i = 0; i < this.buttn_maxcol; i++) {
@@ -253,6 +249,9 @@ class PanelsAgent {
 														[panelIcons['minibucket']]) );
 			this.bcols.push( { r: 0, g: 0, b: 0 } );
 		}
+
+
+
 
 		var row;
 		var buttonDefs;
@@ -265,7 +264,6 @@ class PanelsAgent {
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['save'], txt:"Save" },    		  callfunction: [this, 'saveQuick'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_SEPARATOR, render: null, callfunction: null } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['save'], txt:"Save with Options" },    		  callfunction: [this, 'save'] } );
-		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['save'], txt:"Export Tile as Code" },    		  callfunction: [this, 'export'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_SEPARATOR, render: null, callfunction: null } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['brush2pic'], txt:"Load From Brush"  },     		  callfunction: [this, 'brush2pic'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_SEPARATOR, render: null, callfunction: null } );
@@ -412,7 +410,6 @@ class PanelsAgent {
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['rotatebrush90'], txt:"90 Degrees"  },     		  callfunction: [this, 'effectRotate90'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_SEPARATOR, render: null, callfunction: null } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['gray'], txt:"Grayscale" },    		  callfunction: [this, 'effectBnW'] } );
-		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['negative'], txt:"Negative" },    		  callfunction: [this, 'effectNegative'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['sepia'], txt:"Sepia" }, 	 		  callfunction: [this, 'effectSepia'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['blur'], txt:"Blur" }, 	 		  callfunction: [this, 'effectBlur'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['trim'], txt:"Trim"  },     		  callfunction: [this, 'effectDePixel'] } );
@@ -529,16 +526,10 @@ class PanelsAgent {
 		this.toggleBucketFillSolidIcon = panelIcons['fillsolid'];
 		this.toggleBucketFillBrushIcon = panelIcons['fillbrush'];
 		this.toggleBucketFillBrushWrapIcon = panelIcons['fillbrushstretch'];
-		this.toggleBucketFillColWrapXIcon = panelIcons['fillcolorsgradientx'];
-		this.toggleBucketFillColWrapYIcon = panelIcons['fillcolorsgradienty'];
-		this.toggleBucketFillColWrapXYIcon = panelIcons['fillcolorsgradientxy'];
 		this.toggleBucketFillModes = [];
 		this.toggleBucketFillModes[ 1 ] = 'solid';
 		this.toggleBucketFillModes[ 2 ] = 'stretch';
 		this.toggleBucketFillModes[ 3 ] = 'wrap';
-		this.toggleBucketFillModes[ 4 ] = 'wrapcolx';
-		this.toggleBucketFillModes[ 5 ] = 'wrapcoly';
-		this.toggleBucketFillModes[ 6 ] = 'wrapcolxy';
 		this.toggleBucketFillModeString = 'none';
 
 		//-------------  ???
@@ -615,8 +606,8 @@ class PanelsAgent {
 		b.push( new ToolButton( 'palette:edit', PANEL_LEFTALIGN,row, 2.75, 1,  PPAINTR_BTYPE_CLICK, {txt:"Edit" ,ico: panelIcons['paletteedit']},  'Edit', this, 'editPalette' ));
 
 
+
 		buttonDefs = [];
-		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Retro: c64" },    callfunction: [this, 'makePalleteC64'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Grays" },      callfunction: [this, 'makePalleteGrays'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Reds" },    		callfunction: [this, 'makePalleteReds'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: { txt:"Greens" }, 	 	callfunction: [this, 'makePalleteGreens'] } );
@@ -661,7 +652,7 @@ class PanelsAgent {
 		panelsManager.calculate();
 
 		/* Self register */
-		this.bus.register( this, [ "APPMOUSE", "APPKEYBOARD", "PANEL", "PAINTBUFFER" ], this.getId() );
+		this.bus.register( this, [ "APPMOUSE", "APPKEYBOARD", "PANEL" ], this.getId() );
 
 		this.panelIcons = panelIcons;
 	}
@@ -723,7 +714,7 @@ class PanelsAgent {
 	toggleBucketFillMode ( bid ) {
 
 		this.toggleBucketFillModeFlag += 1;
-		if( this.toggleBucketFillModeFlag >5 ) { this.toggleBucketFillModeFlag = 0; }
+		if( this.toggleBucketFillModeFlag >2 ) { this.toggleBucketFillModeFlag = 0; }
 		this.toggleBucketFillModeString = this.toggleBucketFillModes[ this.toggleBucketFillModeFlag ];
 
 		if( this.toggleBucketFillModeFlag == 0 ) {
@@ -732,12 +723,6 @@ class PanelsAgent {
 				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillBrushIcon );
 		}	else if( this.toggleBucketFillModeFlag == 2 ) {
 				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillBrushWrapIcon );
-		}	else if( this.toggleBucketFillModeFlag == 3 ) {
-				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillColWrapXIcon );
-		}	else if( this.toggleBucketFillModeFlag == 4 ) {
-				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillColWrapYIcon );
-		}	else if( this.toggleBucketFillModeFlag == 5 ) {
-				this.toggleBucketFillModeButton.changeIcon( this.toggleBucketFillColWrapXYIcon );
 		}
 
 
@@ -820,10 +805,6 @@ class PanelsAgent {
 
 	makePalleteDefault( bid ) {
 		this.changePalette( this.defaultPalette );
-	}
-
-	makePalleteC64( bid ) {
-		this.changePalette( this.c64Palette );
 	}
 
 	makeFadedPalette( rgb1, rgb2 ) {
@@ -1010,10 +991,6 @@ class PanelsAgent {
 		}
 	}
 
-	getPalette() {
-			return this.bcols;
-	}
-
 	changePalette( palette ) {
 		console.log( "Palette updated");
 
@@ -1137,7 +1114,6 @@ class PanelsAgent {
 		this.currentColorImage.activateLoadingEvents();
 		this.splashImage.activateLoadingEvents();
 		this.defaultPalette.activateLoadingEvents();
-		this.c64Palette.activateLoadingEvents();
 		//TODO this.updateScreenHandlerRec = { obj: null, method: null };
 
 	}
@@ -1239,12 +1215,6 @@ class PanelsAgent {
 			this.infoRenderer.mouseYPos = sig.data.y;
 			this.infoArea.renderButton();
 		}
-		else if( sig[ 0 ] == 'PAINTBUFFER' && sig[1] == 'CHANGE' ) {
-
-			this.paintbuffer = sig.data.buffer;
-
-		}
-
 	}
 
 	signalScreenUpdate() {
@@ -1469,56 +1439,6 @@ class PanelsAgent {
 		this.bus.post( sig );
 	}
 
-
-	export() {
-
-		this.showPanel();
-
-		new ExportTileOptionsDialog(
-			this.panelsManager,
-			{ obj: this, method: 'intExport' },
-			this.updateScreenHandlerRec,
-			{ obj: this, method: 'tilesSettings2', methodOk: 'tilesSettingsOk' },
-			this
-		).popUp();
-
-		this.panelsManager.calculate();
-
-	}
-
-	intExport( result ) {
-
-		var sig = [];
-		sig[0] = 'PAINT';
-		sig[1] = 'EXPORTOTHER';
-		sig.data = new Object();
-		sig.data.coordinates = new Object();
-		//sig.data.coordinates.rowIx = result.rowix;
-		//sig.data.coordinates.colIx = result.colix;
-		sig.data.coordinates.range = result.range;
-		sig.data.coordinates.tilesW = this.tilesW;
-		sig.data.coordinates.tilesH = this.tilesH;
-		sig.data.isOpaqueFunction = result.isOpaqueFunction;
-		sig.data.getColorIndexFunction = result.getColorIndexFunction;
-		sig.data.colorPalette = this.getPalette();
-		sig.data.colormode = result.colormode;
-		sig.data.exportdatapresentation = result.exportdatapresentation;
-		sig.data.exportdatatype = result.exportdatatype;
-		sig.data.datastart = result.datastart;
-		sig.data.datastep = result.datastep;
-
-
-//		sig.data = "options";
-//		sig.data.bgcolor = this.bgColor;
-
-		console.log( "export" );
-		console.log( sig.data );
-
-		this.bus.post( sig );
-
-	}
-
-
 	save() {
 
 		this.showPanel();
@@ -1532,8 +1452,6 @@ class PanelsAgent {
 		this.panelsManager.calculate();
 
 	}
-
-
 
 	saveQuick() {
 		this.intSave( { transparency: "none" });
@@ -1919,20 +1837,6 @@ class PanelsAgent {
 	}
 
 
-	tilesSettings2( callbackObject ) {
-		this.showPanel();
-
-		new tilesSettingsDialog(
-				this.panelsManager,
-				callbackObject,
-				this.updateScreenHandlerRec,
-				this.tilesW,
-				this.tilesH,
-				this.panelIcons
-			).popUp();
-	}
-
-
 	tilesSettings() {
 		this.showPanel();
 
@@ -1941,8 +1845,7 @@ class PanelsAgent {
 				{ obj: this, method: 'tilesSettingsOk'},
 				this.updateScreenHandlerRec,
 				this.tilesW,
-				this.tilesH,
-				this.panelIcons
+				this.tilesH
 			).popUp();
 	}
 
@@ -2086,16 +1989,6 @@ effectBlur() {
 	this.bus.post( sig );
 }
 
-effectNegative() {
-
-	var sig = [];
-	sig[0] = 'PAINT';
-	sig[1] = 'TRANSFORMPICTURE';
-	sig.data = { tf: "NEGATIVE" };
-	sig.destination = 'Paint';
-
-	this.bus.post( sig );
-}
 
 effectSepia() {
 
