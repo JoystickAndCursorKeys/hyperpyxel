@@ -56,6 +56,8 @@ class ShortCuts {
     shortCuts['b'] =        { 0:'PANEL', 1:'SHORTCUT', destination: 'Panels', data: { buttonId: 'mode.draw:line'} };
     shortCuts['n'] =        { 0:'PANEL', 1:'SHORTCUT', destination: 'Panels', data: { buttonId: 'mode.draw:spray'} };
 
+    shortCuts['t'] =        { 0:'PANEL', 1:'SHORTCUTMENU', destination: 'Panels', data: { subMenuId: 'view.tiles.move'} };    
+
 
 
 

@@ -687,6 +687,22 @@ class PanelsManager {
 		return false;
 	}
 
+	dialogEvent( e )  {
+		var plen = this.panels.length;
+		var panels = this.panels;
+
+		for (var i = 0; i < panels.length; i++) {
+			if( panels[ i ].isDialog && panels[ i ].active ) {
+				if( panels[ i ].handlesEvents() ) {
+					panels[ i ].handleEvent( e ); 
+				}
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	closeMostRecentDialog() {
 		var ix = this.mostRecentDialogIndex();
 		this.panels[ ix ].cancel('left');
@@ -2079,7 +2095,21 @@ class Dialog extends ButtonPanel {
 
 		this.setButtons(  b , "root" );
 
+		this.handlerFun = null;
 	}
+
+	attachEventHandler( handlerClazz, handlerFun ) {
+		this.handlerClazz = handlerClazz;
+		this.handlerFun = handlerFun;
+	}
+
+	handlesEvents() {
+		return this.handlerFun != null;
+	}
+
+	handleEvent( e ) {
+		this.handlerClazz[ this.handlerFun ] ( e );
+	}	
 
 	cancel( physicalButtonId ) {
 		this.active = false;

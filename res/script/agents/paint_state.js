@@ -597,6 +597,13 @@ class PaintState {
 
   }
 
+  tilesOn() {
+    this.tiles = true;
+
+    this.showTiles();
+
+  }  
+
   showTiles() {
 
     this.overlay.clear();

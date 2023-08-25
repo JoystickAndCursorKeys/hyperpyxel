@@ -152,10 +152,11 @@ class PaletteImage extends RawPalette {
 
 				thisPalette.loaded = true;
 
-				console.log( "NotifyLoadedObject = " + thisPalette.notifyLoaded.obj);
-				console.log( "NotifyLoadedFunct = " + thisPalette.notifyLoaded.method);
-
-				thisPalette.notifyLoaded.obj[thisPalette.notifyLoaded.method]( thisPalette );
+				console.log( "NotifyLoaded = " , thisPalette.notifyLoaded);
+				
+				if( thisPalette.notifyLoaded ) {
+					thisPalette.notifyLoaded.obj[thisPalette.notifyLoaded.method]( thisPalette );
+				}
 
 			}
 

@@ -552,6 +552,13 @@ class PaintAgent {
 					this.signalPaintBufferChange();
 
           break;
+        case 'CUSTOMDRAW':
+            this.state.bufferForUndo();
+            sig.data.clazz[ sig.data.method ]( sig.data.data );
+            this.saveUndoSmart( sig.data.opname );
+            this.updateView();
+
+            break;          
         case 'SETTILESIZE':
           this.state.setTileSize(sig.data.tilesW, sig.data.tilesH);
           this.updateView();
@@ -721,6 +728,10 @@ class PaintAgent {
           break;
         case 'FLIPTILES':
           this.state.flipTiles();
+          this.updateView();
+          break;
+        case 'TILESON':
+          this.state.tilesOn();
           this.updateView();
           break;
         case 'FLIPSTENCIL':
@@ -918,6 +929,12 @@ class PaintAgent {
 
     this.bus.post(sig);
   }
+
+
+  bufferForUndo() {
+    this.state.bufferForUndo();
+  }
+  
 
   /* view component interface */
   handleFocusSignal(sig) {

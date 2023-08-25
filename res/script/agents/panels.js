@@ -71,6 +71,10 @@ class PanelsAgent {
 		this.cwhite = { r:255,g:255,b:255};
 	}
 
+	getPanelsManager() {
+		return this.panelsManager;
+	}
+
   constructor( _bus, _constants, _SCRW, _SCRH, _viewprio ) {
 
 		this.bus = _bus;
@@ -211,6 +215,7 @@ class PanelsAgent {
 		panelIcons['spray2'] = new PanelIcon( iisButtons1c,  1 );
 		panelIcons['spray3'] = new PanelIcon( iisButtons1c,  2 );
 		panelIcons['blur'] = new PanelIcon( iisButtons1c,  3 );
+		panelIcons['fatpixels'] = new PanelIcon( iisButtons1c,  16 );
 		panelIcons['intersect'] = new PanelIcon( iisButtons1c,  4 );
 		panelIcons['fillsolid'] = new PanelIcon( iisButtons1c,  5 );
 		panelIcons['fillwrap'] = new PanelIcon( iisButtons1c,  6 );
@@ -382,7 +387,8 @@ class PanelsAgent {
 
 		buttonDefs = [];
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['tiles'], txt:"Tiles On/Off" },    		  	 callfunction: [this, 'flipTiles'] } );
-		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['tiles'], txt:"Tiles Size" },    		  	 callfunction: [this, 'tilesSettings'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['tiles'], txt:"Tiles Settings" },    		  	 callfunction: [this, 'tilesSettings'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['tiles'], txt:"Tiles Moving" },    		  	 callfunction: [this, 'tilesManage'] } );		
 
 		buttonDefs.push( { type: PPAINTR_BTYPE_SEPARATOR, render: null, callfunction: null } );
 
@@ -416,6 +422,7 @@ class PanelsAgent {
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['sepia'], txt:"Sepia" }, 	 		  callfunction: [this, 'effectSepia'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['blur'], txt:"Blur" }, 	 		  callfunction: [this, 'effectBlur'] } );
 		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['trim'], txt:"Trim"  },     		  callfunction: [this, 'effectDePixel'] } );
+		buttonDefs.push( { type: PPAINTR_BTYPE_CLICK, render: {ico: panelIcons['fatpixels'], txt:"Fat Pixels"  },     		  callfunction: [this, 'fatPixels'] } );
 		var menubutton = new ToolButton( id++, PANEL_LEFTALIGN,row, 3, 1,  PPAINTR_BTYPE_CLICK, {txt:"Effect" ,ico: panelIcons['magic']},  null, null,null );
 		var menumanager =  new MenuManager( "menu:manage3",  gw * 5, gh,
 									buttonDefs, this.updateScreenHandlerRec.obj, this.updateScreenHandlerRec.method );
@@ -664,6 +671,9 @@ class PanelsAgent {
 		this.bus.register( this, [ "APPMOUSE", "APPKEYBOARD", "PANEL", "PAINTBUFFER" ], this.getId() );
 
 		this.panelIcons = panelIcons;
+
+
+		//this.panelsManager.setDialogOpenCallbacks( this, 'signalDialogOpen', 'signalDialogClose');
 	}
 
 /*
@@ -795,6 +805,7 @@ class PanelsAgent {
 		this.bus.post( sig );
 
 	}
+	
 
 
 	signalPaintShapeFillAndLine() {
@@ -1161,6 +1172,11 @@ class PanelsAgent {
 			if( sig.data.subMenuId == 'brush:scale' ) {
 					this.scaleBrush( null );
 			}
+			else if( sig.data.subMenuId == 'view.tiles.move' ) {
+				this.tilesOn();
+				this.tilesManage();
+			}			
+			
 		}
 		else if( sig[ 0 ] == 'APPMOUSE' && sig[1] == 'UP' ) {
 			this.panelsManager.handlePanelsClickEvent( sig.data.appPos, sig.data.buttonId );
@@ -1172,6 +1188,11 @@ class PanelsAgent {
 		else if( sig[ 0 ] == 'APPMOUSE' && sig[1] == 'DOWN' ) {
 			this.panelsManager.handlePanelMouseDownEvent( sig.data.appPos, sig.data.buttonId );
 		}
+		else if( sig[ 0 ] == 'APPKEYBOARD' ) {
+			console.log("Keyboard");
+
+			this.panelsManager.dialogEvent( sig );
+		}		
 		else if( sig[ 0 ] == 'PANEL' && sig[1] == 'TOGGLE' ) {
 			this.toggleHidePanelMode();
 		}
@@ -1933,6 +1954,22 @@ class PanelsAgent {
 	}
 
 
+	tilesManage() {
+
+		this.showPanel();
+
+		new tilesManageDialog(
+			this.panelsManager,
+			{ obj: this, method: 'tilesManageOk'},
+			this.updateScreenHandlerRec,
+			this.tilesW,
+			this.tilesH,
+			this.panelIcons,
+			this
+		).popUp();	
+	}
+
+
 	tilesSettings() {
 		this.showPanel();
 
@@ -1944,22 +1981,56 @@ class PanelsAgent {
 				this.tilesH,
 				this.panelIcons
 			).popUp();
+	}	
+
+	tilesManageOk( result ) {
+
+		console.log("tilesManageOk");
+		
+		var sig = [];
+		sig[0] = 'PAINT';
+		sig[1] = 'CUSTOMDRAW';
+		sig.data = {
+			clazz: this,
+			method: "tilesManageOk2",
+			data: result,
+			opname: "organizetiles"
+		};
+
+		this.bus.post( sig );
+		
 	}
+
+
+	tilesManageOk2( result ) {
+
+		console.log("tilesManageOk");
+		this.paintbuffer.context.drawImage( result.newBitmap.canvas, 0,0 );
+	}	
 
 	tilesSettingsOk( result ) {
 
 			console.log("tilesSettingsOk");
 			console.log( result );
 
-			this.tilesW = result.tilesW;
-			this.tilesH = result.tilesH;
 
-			var sig = [];
-			sig[0] = 'PAINT';
-			sig[1] = 'SETTILESIZE';
-			sig.data = result;
+			if( result.type == "tilesize" )  {
 
-			this.bus.post( sig );
+				this.tilesW = result.tilesW;
+				this.tilesH = result.tilesH;
+	
+				var sig = [];
+				sig[0] = 'PAINT';
+				sig[1] = 'SETTILESIZE';
+				sig.data = result;
+	
+				this.bus.post( sig );
+	
+			}
+			else if( result.type == "managetiles" )  {
+
+				this.tilesManage();
+			}
 
 	}
 
@@ -2007,6 +2078,16 @@ class PanelsAgent {
 
 	}
 
+	tilesOn() {
+
+		var sig = [];
+		sig[0] = 'PAINT';
+		sig[1] = 'TILESON';
+		sig.data = null;
+		sig.destination = 'Paint';
+		this.bus.post( sig );
+
+	}
 
 	setModeSpray(  ) {
 		this.setFunction( 'spray', undefined, "draw" );
@@ -2096,6 +2177,21 @@ effectNegative() {
 
 	this.bus.post( sig );
 }
+
+
+fatPixels() {
+
+	var sig = [];
+	sig[0] = 'PAINT';
+	sig[1] = 'TRANSFORMPICTURE';
+	sig.data = { tf: "FATPIXELS" };
+	sig.destination = 'Paint';
+
+	this.bus.post( sig );
+	console.log("Fat pixels")
+}
+
+
 
 effectSepia() {
 

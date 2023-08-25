@@ -26,9 +26,6 @@ class Boot {
 
 		constants.initialImageName = "untitled";
 
-
-
-
 		this.renderCanvasId = _renderCanvasId;
 		this.renderCanvas = document.getElementById( _renderCanvasId );
 

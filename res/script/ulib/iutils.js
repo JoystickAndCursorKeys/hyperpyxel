@@ -800,6 +800,49 @@ class ImageCanvasContext  {
 
 	}
 
+	fatPixels() {
+
+		var imgCtxCanv = this;
+		var tmpImgCtxCanv = imgCtxCanv.copy( );
+
+		var w=tmpImgCtxCanv.w;
+		var h=tmpImgCtxCanv.h;
+		var srcIData = tmpImgCtxCanv.getCopyAllData();
+		var dstIData = imgCtxCanv.getCopyAllData();
+		var srcData = srcIData.data;
+		var dstData = dstIData.data;
+
+		var yoffset = 0;
+		var yoffsetmin = 0;
+		var rowSize = w*4;
+
+		var colorBox = new ColorBox();
+
+		for( var y=0; y<h; y++ ) {
+
+			for( var x=1; x<w; x+=2) {
+
+				var offset0 = yoffset + ((x-1) * 4);
+				var offset = yoffset + (x * 4);
+
+				var r,g,b;
+				r = srcData[ offset0 + 0];
+				g = srcData[ offset0 + 1];
+				b = srcData[ offset0 + 2];
+
+				dstData[ offset + 0]=r;
+				dstData[ offset + 1]=g;
+				dstData[ offset + 2]=b;
+
+			}
+
+			yoffset+= ( rowSize );
+		}
+
+		imgCtxCanv.setAllData( dstIData );
+
+}
+
 	trimAlfa2( ) {
 
 		var imgCtxCanv = this;

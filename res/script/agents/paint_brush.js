@@ -158,6 +158,10 @@ class BareBrush {
 			icc.changeHue( 35 );
 			icc.changeSaturation( 0.7 );
 		}
+		else if( op == "FATPIXELS") {
+			icc.fatPixels(); 
+			console.log("fat pixels");
+		}			
 		else if( op == "BLUR") {
 			icc.blur();
 		}

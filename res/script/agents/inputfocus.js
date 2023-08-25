@@ -19,6 +19,7 @@ class InputFocusAgent {
 
 		this.componentPanels = _componentPanels;
 		this.componentPaint = _componentPaint;
+		this.panelsManager = _componentPanels.getPanelsManager();
 		this.displayComponents = [ _componentPaint, _componentPanels ];
 
 		this.focusMouse = [0, 0];
@@ -45,9 +46,10 @@ class InputFocusAgent {
 		this.panelComponent_DestAddress = this.PrioListOfComponentsEventDestinations[ this.PANEL_INDEX ];
 		this.paintComponent_DestAddress = this.PrioListOfComponentsEventDestinations[ this.PAINT_INDEX ];
 
+		this.focus = "PAINT";
 
 		/* Self register */
-		this.bus.register( this, ['BROWSMOUSE','BROWSKEYBOARD'], '*' );
+		this.bus.register( this, ['BROWSMOUSE','BROWSKEYBOARD', 'FOCUS' ], '*' );
 
 	}
 
@@ -68,6 +70,11 @@ class InputFocusAgent {
 	  sig.destination = sig0.destination;
 
 	  var keyboard = false;
+
+	  this.focus = "PAINT";
+	  if( this.panelsManager.isDialogOpen() ) {
+		this.focus = "PANEL";
+	  }
 
 	  if( sig[ 0 ] == 'BROWSMOUSE' ) {
 		  sig[ 0 ] = 'APPMOUSE';
@@ -124,30 +131,38 @@ class InputFocusAgent {
 
 		sig.destination = this.focusDest;
 		if( keyboard ) {
-			sig.destination = this.paintComponent_DestAddress;
 
-			var shortCut = this.keyShortCuts[ sig[1] ];
-			if( shortCut ) {
-				if( shortCut.destination == undefined ) {
-					shortCut.destination = this.paintComponent_DestAddress;
+			if( this.focus == "PAINT" ) {
+				sig.destination = this.paintComponent_DestAddress;
+
+				var shortCut = this.keyShortCuts[ sig[1] ];
+				if( shortCut ) {
+					if( shortCut.destination == undefined ) {
+						shortCut.destination = this.paintComponent_DestAddress;
+					}
+	
+					this.bus.post( shortCut );
+	
+					return;
 				}
+	
+				var locShortCut = this.keyLocalizedShortCuts[ sig.data.code ];
+				if( locShortCut ) {
+					if( locShortCut.destination == undefined ) {
+						locShortCut.destination = this.paintComponent_DestAddress;
+					}
+	
+	
+					this.bus.post( locShortCut );
+	
+					return;
+				}
+			}
+			else { //Panel
+				sig.destination = this.panelComponent_DestAddress;
 
-				this.bus.post( shortCut );
-
-				return;
 			}
 
-			var locShortCut = this.keyLocalizedShortCuts[ sig.data.code ];
-			if( locShortCut ) {
-				if( locShortCut.destination == undefined ) {
-					locShortCut.destination = this.paintComponent_DestAddress;
-				}
-
-
-				this.bus.post( locShortCut );
-
-				return;
-			}
 
 		}
 
